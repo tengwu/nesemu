@@ -4,25 +4,27 @@ mod memory;
 use std::{io::Write, process::exit};
 
 use cpu::CPU;
+use memory::Memory;
 use monitor::Monitor;
+use nesemu::disassemble;
 
 pub struct Machine {
   cpu: CPU,
+  memory: Memory,
   reset: bool,
   stop: bool,
   debug: bool,
-  stub_insts: Vec<u8>
 }
 
 impl Machine {
   pub fn new() -> Self {
     Machine {
       cpu: CPU::new(),
+      memory: Memory::new(),
       reset: false,
       stop: false,
 
-      debug: true,
-      stub_insts: vec![0xaa, 0xe8, 0x00]
+      debug: true, /* TODO: Don't go to debug mode by defalt */
     }
   }
 
@@ -54,15 +56,20 @@ impl Machine {
 
   fn reset(&mut self) {
     self.cpu.reset();
+    self.memory.reset();
   }
-  
-  fn stub_get_inst(&mut self) -> Vec<u8> {
-    let inst = self.stub_insts[self.cpu.pc as usize];
-    self.cpu.pc += 1;
-    vec![inst]
-  } 
+
+  fn stub_fill_memory_with_insts(&mut self) {
+    /* LDA #$C3 */
+    self.memory.write(0x0, 0xA9);
+    self.memory.write(0x1, 0xC3);
+
+    /* My stub HALT */
+    self.memory.write(0x2, 0xFF);
+  }
 
   pub fn run(&mut self) -> Result<(), String> {
+    self.stub_fill_memory_with_insts();
     loop {
       if self.reset {
         self.reset();
@@ -72,10 +79,9 @@ impl Machine {
         break;
       }
 
-      let inst = self.stub_get_inst();
-      self.cpu.interpret(&inst);
-      
       self.monitor();
+
+      self.cpu.execute(&mut self.memory);
     }
     Ok(())
   }
@@ -91,10 +97,13 @@ impl Monitor for Machine {
     if self.debug {
       loop {
         cmd.clear();
-        /* TODO: Print the next instruction */
+
+        println!("{}", disassemble(&self.cpu.get_next_inst(&self.memory)).trim());
+
         print!("(NESEmu) ");
         std::io::stdout().flush().expect("Failed to flush stdout");
         std::io::stdin().read_line(&mut cmd).unwrap();
+
         match cmd.trim() {
           "r" => {
             self.reset = true;

@@ -1,5 +1,6 @@
 mod cpu;
 mod monitor;
+mod memory;
 use std::{io::Write, process::exit};
 
 use cpu::CPU;
@@ -17,7 +18,6 @@ impl Machine {
   pub fn new() -> Self {
     Machine {
       cpu: CPU::new(),
-      // memory: Memory::new()
       reset: false,
       stop: false,
 
@@ -54,7 +54,6 @@ impl Machine {
 
   fn reset(&mut self) {
     self.cpu.reset();
-    // self.memory.reset();
   }
   
   fn stub_get_inst(&mut self) -> Vec<u8> {

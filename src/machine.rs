@@ -1,6 +1,7 @@
 mod cpu;
 mod monitor;
 mod memory;
+mod instruction;
 use std::{io::Write, process::exit};
 
 use cpu::CPU;
@@ -98,7 +99,8 @@ impl Monitor for Machine {
       loop {
         cmd.clear();
 
-        println!("{}", disassemble(&self.cpu.get_next_inst(&self.memory)).trim());
+        // println!("{}", disassemble(&self.cpu.get_next_inst(&self.memory)).trim());
+        println!("{:?}", self.cpu.get_next_inst(&self.memory));
 
         print!("(NESEmu) ");
         std::io::stdout().flush().expect("Failed to flush stdout");

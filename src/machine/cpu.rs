@@ -1,6 +1,4 @@
-use std::ops::BitAndAssign;
-
-use super::memory::Memory;
+use super::{memory::Memory, instruction::{Instruction, OperandType, Operand}};
 
 pub struct CPU {
   pub a: u8,
@@ -40,54 +38,71 @@ impl CPU {
     self.pc = 0;  /* TODO: Does PC go from 0x0? */
   }
 
-  fn fetch_insts(&mut self, memory: &Memory) -> Vec<u8> {
-    let mut inst: Vec<u8> = Vec::new();
-
+  fn fetch_inst(&mut self, memory: &Memory) -> Instruction {
     let opcode = memory.read(self.pc);
-    inst.push(opcode);
     self.pc += 1;
 
     /* TODO: Refactor the process to fetch operand for some insts */
     if opcode == 0xA9 {
       let operand = memory.read(self.pc);
-      inst.push(operand);
       self.pc += 1;
+      Instruction::LDA(OperandType::Immediate(operand))
+    } else if opcode == 0xFF {
+      Instruction::MyHalt
+    } else {
+      Instruction::Unknown
     }
-
-    inst
   }
 
-  pub fn get_next_inst(&mut self, memory: &Memory) -> Vec<u8> {
-    let inst = self.fetch_insts(memory);
+  /* This method is for debug */
+  pub fn get_next_inst(&mut self, memory: &Memory) -> Instruction {
+    /* 
+     * self.fetch_inst function increased PC automatically,
+     * so we need to recovery it.
+     **/
+    let inst = self.fetch_inst(memory);
 
-    /* TODO: Refactor the process to recovery PC */
-    self.pc -= 1;
-    if inst[0] == 0xA9 {
-      self.pc -= 1;
+    self.pc -= 1;  /* Eat opcode byte */
+
+    match inst.get_operand_type() {
+      OperandType::Absolute(_)  |
+      OperandType::AbsoluteX(_) |
+      OperandType::AbsoluteY(_)
+        => self.pc -= 2,  /* Eat double operands */
+      OperandType::Immediate(_)  |
+      OperandType::IndirectX(_)  |
+      OperandType::IndirectY(_)  |
+      OperandType::ZeroPage(_)   |
+      OperandType::ZeroPageX(_)
+        => self.pc -= 1,  /* Eat single operand */
+      OperandType::NoOperands => (),  /* Eat nothing when no operands */
     }
 
     inst
   }
 
   pub fn execute(&mut self, memory: &mut Memory) {
-    let insts = self.fetch_insts(memory);
-    self.interpret(&insts);
+    let inst = self.fetch_inst(memory);
+    self.interpret(&inst);
   }
 
   /* Stub method for test */
-  pub fn interpret(&mut self, insts: &Vec<u8>) {
-    let opcode = insts[0];
-    match opcode {
-      0xA9 => {
-        let operand = insts[1];
-        self.a = operand;
+  pub fn interpret(&mut self, inst: &Instruction) {
+    let operand_type = inst.get_operand_type();
+    let operand: Operand = operand_type.get_operand();
+    
+    /* TODO: Get and set status register outside */
+    match inst {
+      Instruction::LDA(_) => {
+        self.a = operand.first;
 
+        /* TODO: Add struct StatusReg to Instruction */
         self.set_status_register(self.a, &vec![StatusReg::Negative, StatusReg::Zero]);
       }
-      0xFF => {
-        self.pc -= 1; /* Halt on this instruction */
+      Instruction::MyHalt => {
+        self.pc -= 1;
       }
-      _ => todo!("Unimplement opcode {}", opcode),
+      _ => panic!("Unknown instruction {:?}", inst)
     }
   }
 

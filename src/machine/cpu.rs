@@ -1,3 +1,5 @@
+use std::ops::BitAndAssign;
+
 use super::memory::Memory;
 
 pub struct CPU {
@@ -6,6 +8,17 @@ pub struct CPU {
   pub y: u8,
   pub status: u8,
   pub pc: u16,
+}
+
+enum StatusReg {
+  Negative,
+  Overflow,
+  BHigh,
+  BLow,
+  Decimal,
+  InterruptDisable,
+  Zero,
+  Carry
 }
 
 impl CPU {
@@ -69,7 +82,7 @@ impl CPU {
         let operand = insts[1];
         self.a = operand;
 
-        self.set_status_register(self.a);
+        self.set_status_register(self.a, &vec![StatusReg::Negative, StatusReg::Zero]);
       }
       0xFF => {
         self.pc -= 1; /* Halt on this instruction */
@@ -78,7 +91,16 @@ impl CPU {
     }
   }
 
-  pub fn set_status_register(&mut self, target_reg: u8) {
+  fn set_status_register(&mut self, target_reg: u8, status_bits: &Vec<StatusReg>) {
     /* TODO: Implement this method */
+    for bit in status_bits {
+      match bit {
+        StatusReg::Negative =>
+          self.status = self.status & (0b0111_1111 | target_reg),
+        StatusReg::Zero =>
+          self.status = (self.status == 0) as u8,
+        _ => ()
+      }
+    }
   }
 }

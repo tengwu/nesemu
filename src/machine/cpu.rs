@@ -1,5 +1,5 @@
 use super::{
-    instruction::{ADCInst, InstExe, Instruction, LDAInst, Operand, OperandType},
+    instruction::{ADCInst, Instruction, LDAInst, InstExe},
     memory::Memory,
     monitor::MonitorState,
 };
@@ -63,6 +63,10 @@ enum StatusRegBit {
     Carry,
 }
 
+const OPERAND_SINGLE_WORD: u8 = 1;
+const OPERAND_DOUBLE_WORD: u8 = 1;
+const OPERAND_NON: u8 = 0;
+
 impl CPU {
     pub fn new() -> Self {
         CPU {
@@ -91,15 +95,15 @@ impl CPU {
             0x69 => {
                 let operand = memory.read(self.pc);
                 self.pc += 1;
-                Instruction::ADC(OperandType::Immediate(operand))
+                Instruction::ADC(opcode, operand as u16, OPERAND_SINGLE_WORD)
             }
             0xA9 => {
                 let operand = memory.read(self.pc);
                 self.pc += 1;
-                Instruction::LDA(OperandType::Immediate(operand))
+                Instruction::LDA(opcode, operand as u16, OPERAND_SINGLE_WORD)
             }
-            0xFF => Instruction::MyHalt,
-            _ => Instruction::Unknown,
+            0xFF => Instruction::MyHalt(255),
+            _ => Instruction::Unknown(opcode),
         }
     }
 
@@ -113,16 +117,11 @@ impl CPU {
 
         self.pc -= 1; /* Eat opcode byte */
 
-        match inst.get_operand_type() {
-            OperandType::Absolute(_) | OperandType::AbsoluteX(_) | OperandType::AbsoluteY(_) => {
-                self.pc -= 2 /* Eat double operands */
-            }
-            OperandType::Immediate(_)
-            | OperandType::IndirectX(_)
-            | OperandType::IndirectY(_)
-            | OperandType::ZeroPage(_)
-            | OperandType::ZeroPageX(_) => self.pc -= 1, /* Eat single operand */
-            OperandType::NoOperands => (), /* Eat nothing when no operands */
+        /* Eat operand byte(s) */
+        match inst.get_operand_size() {
+            OPERAND_SINGLE_WORD => self.pc -= 1,
+            OPERAND_DOUBLE_WORD => self.pc -= 2,
+            _ => ()
         }
 
         inst
@@ -135,23 +134,14 @@ impl CPU {
 
     /* Stub method for test */
     pub fn interpret(&mut self, inst: &Instruction, memory: &mut Memory) {
-        // let operand_type = inst.get_operand_type();
-        // let operand: Operand = operand_type.get_operand();
-
         match inst {
             /* TODO: Refactor this piece of code to a small framework */
-            Instruction::LDA(oprd_type) => match oprd_type {
-                OperandType::Immediate(_) => LDAInst::exe_immediate(self, inst, memory),
-                _ => (),
-            },
-            Instruction::ADC(oprd_type) => match oprd_type {
-                OperandType::Immediate(_) => ADCInst::exe_immediate(self, inst, memory),
-                _ => (),
-            },
-            Instruction::MyHalt => {
+            Instruction::LDA(_, _, _) => LDAInst::execute(self, inst, memory),
+            Instruction::ADC(_, _, _) => ADCInst::execute(self, inst, memory),
+            Instruction::MyHalt(_) => {
                 self.pc -= 1;
             }
-            _ => panic!("Unknown instruction {:?}", inst),
+            _ => panic!("Unimplemented instruction"),
         }
     }
 

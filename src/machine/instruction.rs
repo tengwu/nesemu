@@ -2,270 +2,168 @@ use super::cpu::CPU;
 use super::memory::Memory;
 use core::panic;
 
-impl std::convert::From<Operand> for u16 {
-    fn from(value: Operand) -> Self {
-        ((value.first as u16) << 8) | (value.second as u16)
-    }
-}
-
-impl std::convert::From<u16> for Operand {
-    fn from(value: u16) -> Self {
-        Operand {
-            first: ((value >> 8) & 0x00FF) as u8,
-            second: (value & 0x00FF) as u8,
-        }
-    }
-}
-
-impl std::convert::From<u8> for Operand {
-    fn from(value: u8) -> Self {
-        Operand {
-            first: value,
-            second: 0,
-        }
-    }
-}
-
-pub struct Operand {
-    pub first: u8,
-    pub second: u8,
-}
-
-#[derive(Debug)]
-pub enum OperandType {
-    Immediate(u8),
-    ZeroPage(u8),
-    ZeroPageX(u8),
-    Absolute(u16),
-    AbsoluteX(u16),
-    AbsoluteY(u16),
-    IndirectX(u8),
-    IndirectY(u8),
-    NoOperands,
-}
-
-impl OperandType {
-    pub fn get_operand(&self) -> Operand {
-        match self {
-            OperandType::Absolute(x) => Operand::from(x.clone()),
-            OperandType::AbsoluteX(x) => Operand::from(x.clone()),
-            OperandType::AbsoluteY(x) => Operand::from(x.clone()),
-            OperandType::Immediate(x) => Operand::from(x.clone()),
-            OperandType::IndirectX(x) => Operand::from(x.clone()),
-            OperandType::IndirectY(x) => Operand::from(x.clone()),
-            OperandType::ZeroPage(x) => Operand::from(x.clone()),
-            OperandType::ZeroPageX(x) => Operand::from(x.clone()),
-            _ => Operand {
-                first: 0,
-                second: 0,
-            },
-        }
-    }
-}
-
 #[derive(Debug)]
 pub enum Instruction {
-    ADC(OperandType),
-    AND(OperandType),
-    ASL(OperandType),
-    BCC(OperandType),
-    BCS(OperandType),
-    BEQ(OperandType),
-    BIT(OperandType),
-    BMI(OperandType),
-    BNE(OperandType),
-    BPL(OperandType),
-    BRK(OperandType),
-    BVC(OperandType),
-    BVS(OperandType),
-    CLC(OperandType),
-    CLD(OperandType),
-    CLI(OperandType),
-    CLV(OperandType),
-    CMP(OperandType),
-    CPX(OperandType),
-    CPY(OperandType),
-    DEC(OperandType),
-    DEX(OperandType),
-    DEY(OperandType),
-    EOR(OperandType),
-    INC(OperandType),
-    INX(OperandType),
-    INY(OperandType),
-    JMP(OperandType),
-    JSR(OperandType),
-    LDA(OperandType),
-    LDX(OperandType),
-    LDY(OperandType),
-    LSR(OperandType),
-    NOP(OperandType),
-    ORA(OperandType),
-    PHA(OperandType),
-    PHP(OperandType),
-    PLA(OperandType),
-    PLP(OperandType),
-    ROL(OperandType),
-    ROR(OperandType),
-    RTI(OperandType),
-    RTS(OperandType),
-    SBC(OperandType),
-    SEC(OperandType),
-    SED(OperandType),
-    SEI(OperandType),
-    STA(OperandType),
-    STX(OperandType),
-    STY(OperandType),
-    TAX(OperandType),
-    TAY(OperandType),
-    TSX(OperandType),
-    TXA(OperandType),
-    TXS(OperandType),
-    TYA(OperandType),
+    /* InstructionName(Opcode, Operand, Oprand byte size) */
+    ADC(u8, u16, u8),
+    AND(u8, u16, u8),
+    ASL(u8, u16, u8),
+    BCC(u8, u16, u8),
+    BCS(u8, u16, u8),
+    BEQ(u8, u16, u8),
+    BIT(u8, u16, u8),
+    BMI(u8, u16, u8),
+    BNE(u8, u16, u8),
+    BPL(u8, u16, u8),
+    BRK(u8, u16, u8),
+    BVC(u8, u16, u8),
+    BVS(u8, u16, u8),
+    CLC(u8, u16, u8),
+    CLD(u8, u16, u8),
+    CLI(u8, u16, u8),
+    CLV(u8, u16, u8),
+    CMP(u8, u16, u8),
+    CPX(u8, u16, u8),
+    CPY(u8, u16, u8),
+    DEC(u8, u16, u8),
+    DEX(u8, u16, u8),
+    DEY(u8, u16, u8),
+    EOR(u8, u16, u8),
+    INC(u8, u16, u8),
+    INX(u8, u16, u8),
+    INY(u8, u16, u8),
+    JMP(u8, u16, u8),
+    JSR(u8, u16, u8),
+    LDA(u8, u16, u8),
+    LDX(u8, u16, u8),
+    LDY(u8, u16, u8),
+    LSR(u8, u16, u8),
+    NOP(u8, u16, u8),
+    ORA(u8, u16, u8),
+    PHA(u8, u16, u8),
+    PHP(u8, u16, u8),
+    PLA(u8, u16, u8),
+    PLP(u8, u16, u8),
+    ROL(u8, u16, u8),
+    ROR(u8, u16, u8),
+    RTI(u8, u16, u8),
+    RTS(u8, u16, u8),
+    SBC(u8, u16, u8),
+    SEC(u8, u16, u8),
+    SED(u8, u16, u8),
+    SEI(u8, u16, u8),
+    STA(u8, u16, u8),
+    STX(u8, u16, u8),
+    STY(u8, u16, u8),
+    TAX(u8, u16, u8),
+    TAY(u8, u16, u8),
+    TSX(u8, u16, u8),
+    TXA(u8, u16, u8),
+    TXS(u8, u16, u8),
+    TYA(u8, u16, u8),
 
-    MyHalt,
-    Unknown,
+    MyHalt(u8),
+    Unknown(u8),
 }
 
 impl Instruction {
-    pub fn get_operand_type(&self) -> &OperandType {
+    pub fn get_contents(&self) -> (u8, u16, u8) {
         match self {
-            Instruction::ADC(operand)
-            | Instruction::AND(operand)
-            | Instruction::ASL(operand)
-            | Instruction::BCC(operand)
-            | Instruction::BCS(operand)
-            | Instruction::BEQ(operand)
-            | Instruction::BIT(operand)
-            | Instruction::BMI(operand)
-            | Instruction::BNE(operand)
-            | Instruction::BPL(operand)
-            | Instruction::BRK(operand)
-            | Instruction::BVC(operand)
-            | Instruction::BVS(operand)
-            | Instruction::CLC(operand)
-            | Instruction::CLD(operand)
-            | Instruction::CLI(operand)
-            | Instruction::CLV(operand)
-            | Instruction::CMP(operand)
-            | Instruction::CPX(operand)
-            | Instruction::CPY(operand)
-            | Instruction::DEC(operand)
-            | Instruction::DEX(operand)
-            | Instruction::DEY(operand)
-            | Instruction::EOR(operand)
-            | Instruction::INC(operand)
-            | Instruction::INX(operand)
-            | Instruction::INY(operand)
-            | Instruction::JMP(operand)
-            | Instruction::JSR(operand)
-            | Instruction::LDA(operand)
-            | Instruction::LDX(operand)
-            | Instruction::LDY(operand)
-            | Instruction::LSR(operand)
-            | Instruction::NOP(operand)
-            | Instruction::ORA(operand)
-            | Instruction::PHA(operand)
-            | Instruction::PHP(operand)
-            | Instruction::PLA(operand)
-            | Instruction::PLP(operand)
-            | Instruction::ROL(operand)
-            | Instruction::ROR(operand)
-            | Instruction::RTI(operand)
-            | Instruction::RTS(operand)
-            | Instruction::SBC(operand)
-            | Instruction::SEC(operand)
-            | Instruction::SED(operand)
-            | Instruction::SEI(operand)
-            | Instruction::STA(operand)
-            | Instruction::STX(operand)
-            | Instruction::STY(operand)
-            | Instruction::TAX(operand)
-            | Instruction::TAY(operand)
-            | Instruction::TSX(operand)
-            | Instruction::TXA(operand)
-            | Instruction::TXS(operand)
-            | Instruction::TYA(operand) => operand,
-            Instruction::MyHalt => &OperandType::NoOperands,
+              Instruction::ADC(opcode, operand, operand_size)
+            | Instruction::AND(opcode, operand, operand_size)
+            | Instruction::ASL(opcode, operand, operand_size)
+            | Instruction::BCC(opcode, operand, operand_size)
+            | Instruction::BCS(opcode, operand, operand_size)
+            | Instruction::BEQ(opcode, operand, operand_size)
+            | Instruction::BIT(opcode, operand, operand_size)
+            | Instruction::BMI(opcode, operand, operand_size)
+            | Instruction::BNE(opcode, operand, operand_size)
+            | Instruction::BPL(opcode, operand, operand_size)
+            | Instruction::BRK(opcode, operand, operand_size)
+            | Instruction::BVC(opcode, operand, operand_size)
+            | Instruction::BVS(opcode, operand, operand_size)
+            | Instruction::CLC(opcode, operand, operand_size)
+            | Instruction::CLD(opcode, operand, operand_size)
+            | Instruction::CLI(opcode, operand, operand_size)
+            | Instruction::CLV(opcode, operand, operand_size)
+            | Instruction::CMP(opcode, operand, operand_size)
+            | Instruction::CPX(opcode, operand, operand_size)
+            | Instruction::CPY(opcode, operand, operand_size)
+            | Instruction::DEC(opcode, operand, operand_size)
+            | Instruction::DEX(opcode, operand, operand_size)
+            | Instruction::DEY(opcode, operand, operand_size)
+            | Instruction::EOR(opcode, operand, operand_size)
+            | Instruction::INC(opcode, operand, operand_size)
+            | Instruction::INX(opcode, operand, operand_size)
+            | Instruction::INY(opcode, operand, operand_size)
+            | Instruction::JMP(opcode, operand, operand_size)
+            | Instruction::JSR(opcode, operand, operand_size)
+            | Instruction::LDA(opcode, operand, operand_size)
+            | Instruction::LDX(opcode, operand, operand_size)
+            | Instruction::LDY(opcode, operand, operand_size)
+            | Instruction::LSR(opcode, operand, operand_size)
+            | Instruction::NOP(opcode, operand, operand_size)
+            | Instruction::ORA(opcode, operand, operand_size)
+            | Instruction::PHA(opcode, operand, operand_size)
+            | Instruction::PHP(opcode, operand, operand_size)
+            | Instruction::PLA(opcode, operand, operand_size)
+            | Instruction::PLP(opcode, operand, operand_size)
+            | Instruction::ROL(opcode, operand, operand_size)
+            | Instruction::ROR(opcode, operand, operand_size)
+            | Instruction::RTI(opcode, operand, operand_size)
+            | Instruction::RTS(opcode, operand, operand_size)
+            | Instruction::SBC(opcode, operand, operand_size)
+            | Instruction::SEC(opcode, operand, operand_size)
+            | Instruction::SED(opcode, operand, operand_size)
+            | Instruction::SEI(opcode, operand, operand_size)
+            | Instruction::STA(opcode, operand, operand_size)
+            | Instruction::STX(opcode, operand, operand_size)
+            | Instruction::STY(opcode, operand, operand_size)
+            | Instruction::TAX(opcode, operand, operand_size)
+            | Instruction::TAY(opcode, operand, operand_size)
+            | Instruction::TSX(opcode, operand, operand_size)
+            | Instruction::TXA(opcode, operand, operand_size)
+            | Instruction::TXS(opcode, operand, operand_size)
+            | Instruction::TYA(opcode, operand, operand_size) => (*opcode, *operand, *operand_size),
+            Instruction::MyHalt(opcode) => (255, 0, 0),
             _ => {
                 panic!("Unknown instruction {:?}", self);
             }
         }
     }
+
+    pub fn get_operand(&self) -> u16 {
+        self.get_contents().1
+    }
+
+    pub fn get_opcode(&self) -> u8 {
+        self.get_contents().0
+    }
+
+    pub fn get_operand_size(&self) -> u8 {
+        self.get_contents().2
+    }
 }
 
 pub trait InstExe {
-    fn exe_immediate(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory);
-    fn exe_zero_page(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory);
-    fn exe_zero_page_X(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory);
-    fn exe_absolute(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory);
-    fn exe_absolute_X(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory);
-    fn exe_indirect_X(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory);
-    fn exe_indirect_Y(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory);
+    fn execute(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory);
 }
 
 pub struct ADCInst;
 impl InstExe for ADCInst {
-    fn exe_immediate(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        let operand = inst.get_operand_type().get_operand();
-        (_, cpu.status.overflow) = (cpu.a as i8).overflowing_add(operand.first as i8);
-        (cpu.a, cpu.status.carry) = cpu.a.overflowing_add(operand.first);
+    fn execute(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
+        let operand = inst.get_operand();
+        (_, cpu.status.overflow) = (cpu.a as i8).overflowing_add(operand as i8);
+        (cpu.a, cpu.status.carry) = cpu.a.overflowing_add(operand as u8);
         cpu.set_nz(cpu.a);
-    }
-
-    fn exe_absolute(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!("Unimplemented method");
-    }
-
-    fn exe_absolute_X(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!("Unimplemented method");
-    }
-
-    fn exe_indirect_X(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!("Unimplemented method");
-    }
-
-    fn exe_indirect_Y(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!("Unimplemented method");
-    }
-
-    fn exe_zero_page(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!("Unimplemented method");
-    }
-
-    fn exe_zero_page_X(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!("Unimplemented method");
     }
 }
 
 pub struct LDAInst;
 impl InstExe for LDAInst {
-    fn exe_immediate(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        let operand = inst.get_operand_type().get_operand();
-        cpu.a = operand.first;
+    fn execute(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
+        let operand = inst.get_operand();
+        cpu.a = operand as u8;
         cpu.set_nz(cpu.a);
-    }
-
-    fn exe_absolute(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!();
-    }
-
-    fn exe_absolute_X(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!();
-    }
-
-    fn exe_indirect_X(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!();
-    }
-
-    fn exe_indirect_Y(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!();
-    }
-
-    fn exe_zero_page(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!();
-    }
-
-    fn exe_zero_page_X(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        todo!();
     }
 }

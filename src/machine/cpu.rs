@@ -63,8 +63,8 @@ enum StatusRegBit {
     Carry,
 }
 
-const OPERAND_SINGLE_WORD: u8 = 1;
-const OPERAND_DOUBLE_WORD: u8 = 1;
+const OPERAND_SINGLE_BYTE: u8 = 1;
+const OPERAND_DOUBLE_BYTES: u8 = 2;
 const OPERAND_NON: u8 = 0;
 
 impl CPU {
@@ -86,6 +86,82 @@ impl CPU {
         self.pc = 0; /* TODO: Does PC go from 0x0? */
     }
 
+    fn _resolve_imm_opnd(&mut self, memory: &Memory) -> u16 {
+        let operand = memory.read(self.pc);
+        self.pc += 1;
+        operand as u16
+    }
+
+    fn _resolve_zero_page_opnd(&mut self, memory: &Memory) -> u16 {
+        let zero_page_addr = memory.read(self.pc);
+        self.pc += 1;
+        zero_page_addr as u16
+    }
+
+    fn _resolve_zero_page_x_opnd(&mut self, memory: &Memory) -> u16 {
+        let zero_page_addr = memory.read(self.pc);
+        self.pc += 1;
+        (zero_page_addr + self.x) as u16
+    }
+
+    fn _resolve_zero_page_y_opnd(&mut self, memory: &Memory) -> u16 {
+        let zero_page_addr = memory.read(self.pc);
+        self.pc += 1;
+        (zero_page_addr + self.y) as u16
+    }
+
+    fn _resolve_absolute_opnd(&mut self, memory: &Memory) -> u16 {
+        let low_byte = memory.read(self.pc);
+        self.pc += 1;
+        let high_byte = memory.read(self.pc);
+        self.pc += 1;
+        (high_byte as u16) << 8 | low_byte as u16
+    }
+
+    fn _resolve_absolute_x_opnd(&mut self, memory: &Memory) -> u16 {
+        let low_byte = memory.read(self.pc);
+        self.pc += 1;
+        let high_byte = memory.read(self.pc);
+        self.pc += 1;
+        ((high_byte as u16) << 8 | low_byte as u16) + self.x as u16
+    }
+
+    fn _resolve_absolute_y_opnd(&mut self, memory: &Memory) -> u16 {
+        let low_byte = memory.read(self.pc);
+        self.pc += 1;
+        let high_byte = memory.read(self.pc);
+        self.pc += 1;
+        ((high_byte as u16) << 8 | low_byte as u16) + self.y as u16
+    }
+
+    fn _resolve_indirect_opnd(&mut self, memory: &Memory) -> u16 {
+        let low_byte = memory.read(self.pc);
+        self.pc += 1;
+        let high_byte = memory.read(self.pc);
+        self.pc += 1;
+        let indirect_addr = ((high_byte as u16) << 8 | low_byte as u16) + self.x as u16;
+        let low_byte = memory.read(indirect_addr);
+        let high_byte = memory.read(indirect_addr + 1);
+        (high_byte as u16) << 8 | low_byte as u16
+    }
+
+    fn _resolve_index_indirect_opnd(&mut self, memory: &Memory) -> u16 {
+        let base_addr = memory.read(self.pc);
+        self.pc += 1;
+        let addr = (base_addr + self.x) as u16;
+        let low_byte = memory.read(addr);
+        let high_byte = memory.read(addr + 1);
+        (high_byte as u16) << 8 | low_byte as u16
+    }
+
+    fn _resolve_indirect_index_opnd(&mut self, memory: &Memory) -> u16 {
+        let indirect_addr = memory.read(self.pc);
+        self.pc += 1;
+        let low_byte = memory.read(indirect_addr as u16);
+        let high_byte = memory.read((indirect_addr + 1) as u16);
+        ((high_byte as u16) << 8 | low_byte as u16) + self.y as u16
+    }
+
     fn fetch_inst(&mut self, memory: &Memory) -> Instruction {
         let opcode = memory.read(self.pc);
         self.pc += 1;
@@ -93,14 +169,33 @@ impl CPU {
         /* TODO: Refactor the process to fetch operand for some insts */
         match opcode {
             0x69 => {
-                let operand = memory.read(self.pc);
-                self.pc += 1;
-                Instruction::ADC(opcode, operand as u16, OPERAND_SINGLE_WORD)
+                Instruction::ADC(opcode, self._resolve_imm_opnd(memory), OPERAND_SINGLE_BYTE)
+            }
+            0x65 => {
+                Instruction::ADC(opcode, self._resolve_zero_page_opnd(memory), OPERAND_SINGLE_BYTE)
+            }
+            0x75 => {
+                Instruction::ADC(opcode, self._resolve_zero_page_x_opnd(memory), OPERAND_SINGLE_BYTE)
+            }
+            0x6D => {
+                Instruction::ADC(opcode, self._resolve_absolute_opnd(memory), OPERAND_DOUBLE_BYTES)
+            }
+            0x7D => {
+                Instruction::ADC(opcode, self._resolve_absolute_x_opnd(memory), OPERAND_DOUBLE_BYTES)
+            }
+            0x79 => {
+                Instruction::ADC(opcode, self._resolve_absolute_y_opnd(memory), OPERAND_DOUBLE_BYTES)
+            }
+            0x61 => {
+                Instruction::ADC(opcode, self._resolve_index_indirect_opnd(memory), OPERAND_SINGLE_BYTE)
+            }
+            0x71 => {
+                Instruction::ADC(opcode, self._resolve_indirect_index_opnd(memory), OPERAND_SINGLE_BYTE)
             }
             0xA9 => {
                 let operand = memory.read(self.pc);
                 self.pc += 1;
-                Instruction::LDA(opcode, operand as u16, OPERAND_SINGLE_WORD)
+                Instruction::LDA(opcode, operand as u16, OPERAND_SINGLE_BYTE)
             }
             0xFF => Instruction::MyHalt(255),
             _ => Instruction::Unknown(opcode),
@@ -119,8 +214,8 @@ impl CPU {
 
         /* Eat operand byte(s) */
         match inst.get_operand_size() {
-            OPERAND_SINGLE_WORD => self.pc -= 1,
-            OPERAND_DOUBLE_WORD => self.pc -= 2,
+            OPERAND_SINGLE_BYTE => self.pc -= 1,
+            OPERAND_DOUBLE_BYTES => self.pc -= 2,
             _ => ()
         }
 
@@ -151,7 +246,7 @@ impl CPU {
      */
     pub fn set_nz(&mut self, target_reg: u8) {
         self.status.negative = (target_reg & 0b1000_0000) != 0;
-        self.status.zero = (target_reg == 0);
+        self.status.zero = target_reg == 0;
     }
 }
 

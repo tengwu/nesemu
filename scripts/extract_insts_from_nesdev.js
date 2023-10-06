@@ -78,8 +78,8 @@ var address_method_to_enum = {
 }
 
 var operand_encoding = {
-  '3' : 'OPERAND_SINGLE_ENCODING',
-  '2' : 'OPERAND_DOUBLE_ENCODING',
+  '3' : 'OPERAND_DOUBLE_ENCODING',
+  '2' : 'OPERAND_SINGLE_ENCODING',
   '1' : 'OPERAND_NON'
 }
 

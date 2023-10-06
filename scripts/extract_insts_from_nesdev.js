@@ -87,6 +87,6 @@ for (var i = 0; i < insts.length; i++) {
   var inst_name = insts_names[i];
   var inst = insts[i]
   inst.forEach(function(x) {
-    console.log(x[IDX_OPCODE] + '=>{' + 'Instruction::' + inst_name + '(opcode, ' + address_method_dict[x[IDX_ADDR_METHOD]] + ', ' + operand_encoding[x[IDX_BYTES]] + ', ' + address_method_to_enum[x[IDX_ADDR_METHOD]] + '),')
+    console.log(x[IDX_OPCODE] + '=>{' + 'Instruction::' + inst_name + '(opcode, ' + address_method_dict[x[IDX_ADDR_METHOD]] + ', ' + operand_encoding[x[IDX_BYTES]] + ', ' + address_method_to_enum[x[IDX_ADDR_METHOD]] + '),}')
   })
 }

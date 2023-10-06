@@ -1,5 +1,5 @@
 use super::{
-    instruction::{ADCInst, Instruction, LDAInst, InstEXE},
+    instruction::{ADCInst, InstEXE, Instruction, LDAInst},
     memory::Memory,
     monitor::MonitorState,
 };
@@ -69,7 +69,12 @@ const OPERAND_NON: u8 = 0;
 
 #[derive(Debug)]
 pub enum OperandType {
-    Imm, Mem, Implied
+    Imm,
+    Mem,
+    Implied,
+    Accumulator,
+    Relative,
+    Indirect,
 }
 
 impl CPU {
@@ -173,35 +178,916 @@ impl CPU {
 
         /* TODO: Refactor the process to fetch operand for some insts */
         match opcode {
-            0x69 => {
-                Instruction::ADC(opcode, self._resolve_imm_opnd(memory), OPERAND_SINGLE_ENCODING, OperandType::Imm)
-            }
-            0x65 => {
-                Instruction::ADC(opcode, self._resolve_zero_page_opnd(memory), OPERAND_SINGLE_ENCODING, OperandType::Mem)
-            }
-            0x75 => {
-                Instruction::ADC(opcode, self._resolve_zero_page_x_opnd(memory), OPERAND_SINGLE_ENCODING, OperandType::Mem)
-            }
-            0x6D => {
-                Instruction::ADC(opcode, self._resolve_absolute_opnd(memory), OPERAND_DOUBLE_ENCODING, OperandType::Mem)
-            }
-            0x7D => {
-                Instruction::ADC(opcode, self._resolve_absolute_x_opnd(memory), OPERAND_DOUBLE_ENCODING, OperandType::Mem)
-            }
-            0x79 => {
-                Instruction::ADC(opcode, self._resolve_absolute_y_opnd(memory), OPERAND_DOUBLE_ENCODING, OperandType::Mem)
-            }
-            0x61 => {
-                Instruction::ADC(opcode, self._resolve_index_indirect_opnd(memory), OPERAND_SINGLE_ENCODING, OperandType::Mem)
-            }
-            0x71 => {
-                Instruction::ADC(opcode, self._resolve_indirect_index_opnd(memory), OPERAND_SINGLE_ENCODING, OperandType::Mem)
-            }
-            0xA9 => {
-                let operand = memory.read(self.pc);
-                self.pc += 1;
-                Instruction::LDA(opcode, operand as u16, OPERAND_SINGLE_ENCODING, OperandType::Imm)
-            }
+            0x69 => Instruction::ADC(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+            0x65 => Instruction::ADC(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+            0x75 => Instruction::ADC(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x6D => Instruction::ADC(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x7D => Instruction::ADC(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x79 => Instruction::ADC(
+                opcode,
+                self._resolve_absolute_y_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x61 => Instruction::ADC(
+                opcode,
+                self._resolve_index_indirect_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x71 => Instruction::ADC(
+                opcode,
+                self._resolve_indirect_index_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x29 => Instruction::AND(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+
+            0x25 => Instruction::AND(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x35 => Instruction::AND(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x2D => Instruction::AND(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x3D => Instruction::AND(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x39 => Instruction::AND(
+                opcode,
+                self._resolve_absolute_y_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x21 => Instruction::AND(
+                opcode,
+                self._resolve_index_indirect_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x31 => Instruction::AND(
+                opcode,
+                self._resolve_indirect_index_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x0A => Instruction::ASL(opcode, 0, OPERAND_NON, OperandType::Accumulator),
+
+            0x06 => Instruction::ASL(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x16 => Instruction::ASL(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x0E => Instruction::ASL(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x1E => Instruction::ASL(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x90 => Instruction::BCC(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Relative,
+            ),
+
+            0xB0 => Instruction::BCS(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Relative,
+            ),
+
+            0xF0 => Instruction::BEQ(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Relative,
+            ),
+
+            0x24 => Instruction::BIT(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x2C => Instruction::BIT(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x30 => Instruction::BMI(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Relative,
+            ),
+
+            0xD0 => Instruction::BNE(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Relative,
+            ),
+
+            0x10 => Instruction::BPL(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Relative,
+            ),
+
+            0x00 => Instruction::BRK(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x50 => Instruction::BVC(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Relative,
+            ),
+
+            0x70 => Instruction::BVS(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Relative,
+            ),
+
+            0x18 => Instruction::CLC(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0xD8 => Instruction::CLD(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x58 => Instruction::CLI(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0xB8 => Instruction::CLV(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0xC9 => Instruction::CMP(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+
+            0xC5 => Instruction::CMP(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xD5 => Instruction::CMP(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xCD => Instruction::CMP(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xDD => Instruction::CMP(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xD9 => Instruction::CMP(
+                opcode,
+                self._resolve_absolute_y_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xC1 => Instruction::CMP(
+                opcode,
+                self._resolve_index_indirect_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xD1 => Instruction::CMP(
+                opcode,
+                self._resolve_indirect_index_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xE0 => Instruction::CPX(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+
+            0xE4 => Instruction::CPX(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xEC => Instruction::CPX(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xC0 => Instruction::CPY(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+
+            0xC4 => Instruction::CPY(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xCC => Instruction::CPY(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xC6 => Instruction::DEC(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xD6 => Instruction::DEC(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xCE => Instruction::DEC(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xDE => Instruction::DEC(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xCA => Instruction::DEX(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x88 => Instruction::DEY(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x49 => Instruction::EOR(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+
+            0x45 => Instruction::EOR(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x55 => Instruction::EOR(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x4D => Instruction::EOR(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x5D => Instruction::EOR(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x59 => Instruction::EOR(
+                opcode,
+                self._resolve_absolute_y_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x41 => Instruction::EOR(
+                opcode,
+                self._resolve_index_indirect_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x51 => Instruction::EOR(
+                opcode,
+                self._resolve_indirect_index_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xE6 => Instruction::INC(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xF6 => Instruction::INC(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xEE => Instruction::INC(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xFE => Instruction::INC(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xE8 => Instruction::INX(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0xC8 => Instruction::INY(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x4C => Instruction::JMP(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x6C => Instruction::JMP(
+                opcode,
+                self._resolve_indirect_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Indirect,
+            ),
+
+            0x20 => Instruction::JSR(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xA9 => Instruction::LDA(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+
+            0xA5 => Instruction::LDA(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xB5 => Instruction::LDA(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xAD => Instruction::LDA(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xBD => Instruction::LDA(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xB9 => Instruction::LDA(
+                opcode,
+                self._resolve_absolute_y_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xA1 => Instruction::LDA(
+                opcode,
+                self._resolve_index_indirect_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xB1 => Instruction::LDA(
+                opcode,
+                self._resolve_indirect_index_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xA2 => Instruction::LDX(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+
+            0xA6 => Instruction::LDX(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xB6 => Instruction::LDX(
+                opcode,
+                self._resolve_zero_page_y_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xAE => Instruction::LDX(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xBE => Instruction::LDX(
+                opcode,
+                self._resolve_absolute_y_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xA0 => Instruction::LDY(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+
+            0xA4 => Instruction::LDY(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xB4 => Instruction::LDY(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xAC => Instruction::LDY(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xBC => Instruction::LDY(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x4A => Instruction::LSR(opcode, 0, OPERAND_NON, OperandType::Accumulator),
+
+            0x46 => Instruction::LSR(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x56 => Instruction::LSR(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x4E => Instruction::LSR(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x5E => Instruction::LSR(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xEA => Instruction::NOP(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x09 => Instruction::ORA(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+
+            0x05 => Instruction::ORA(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x15 => Instruction::ORA(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x0D => Instruction::ORA(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x1D => Instruction::ORA(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x19 => Instruction::ORA(
+                opcode,
+                self._resolve_absolute_y_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x01 => Instruction::ORA(
+                opcode,
+                self._resolve_index_indirect_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x11 => Instruction::ORA(
+                opcode,
+                self._resolve_indirect_index_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x48 => Instruction::PHA(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x08 => Instruction::PHP(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x68 => Instruction::PLA(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x28 => Instruction::PLP(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x2A => Instruction::ROL(opcode, 0, OPERAND_NON, OperandType::Accumulator),
+
+            0x26 => Instruction::ROL(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x36 => Instruction::ROL(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x2E => Instruction::ROL(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x3E => Instruction::ROL(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x6A => Instruction::ROR(opcode, 0, OPERAND_NON, OperandType::Accumulator),
+
+            0x66 => Instruction::ROR(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x76 => Instruction::ROR(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x6E => Instruction::ROR(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x7E => Instruction::ROR(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x40 => Instruction::RTI(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x60 => Instruction::RTS(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0xE9 => Instruction::SBC(
+                opcode,
+                self._resolve_imm_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Imm,
+            ),
+
+            0xE5 => Instruction::SBC(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xF5 => Instruction::SBC(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xED => Instruction::SBC(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xFD => Instruction::SBC(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xF9 => Instruction::SBC(
+                opcode,
+                self._resolve_absolute_y_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xE1 => Instruction::SBC(
+                opcode,
+                self._resolve_index_indirect_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xF1 => Instruction::SBC(
+                opcode,
+                self._resolve_indirect_index_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x38 => Instruction::SEC(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0xF8 => Instruction::SED(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x78 => Instruction::SEI(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x85 => Instruction::STA(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x95 => Instruction::STA(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x8D => Instruction::STA(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x9D => Instruction::STA(
+                opcode,
+                self._resolve_absolute_x_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x99 => Instruction::STA(
+                opcode,
+                self._resolve_absolute_y_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x81 => Instruction::STA(
+                opcode,
+                self._resolve_index_indirect_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x91 => Instruction::STA(
+                opcode,
+                self._resolve_indirect_index_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x86 => Instruction::STX(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x96 => Instruction::STX(
+                opcode,
+                self._resolve_zero_page_y_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x8E => Instruction::STX(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x84 => Instruction::STY(
+                opcode,
+                self._resolve_zero_page_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x94 => Instruction::STY(
+                opcode,
+                self._resolve_zero_page_x_opnd(memory),
+                OPERAND_SINGLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0x8C => Instruction::STY(
+                opcode,
+                self._resolve_absolute_opnd(memory),
+                OPERAND_DOUBLE_ENCODING,
+                OperandType::Mem,
+            ),
+
+            0xAA => Instruction::TAX(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0xA8 => Instruction::TAY(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0xBA => Instruction::TSX(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x8A => Instruction::TXA(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x9A => Instruction::TXS(opcode, 0, OPERAND_NON, OperandType::Implied),
+
+            0x98 => Instruction::TYA(opcode, 0, OPERAND_NON, OperandType::Implied),
+
             0xFF => Instruction::MyHalt(255),
             _ => Instruction::Unknown(opcode),
         }
@@ -221,7 +1107,7 @@ impl CPU {
         match inst.get_operand_size() {
             OPERAND_SINGLE_ENCODING => self.pc -= 1,
             OPERAND_DOUBLE_ENCODING => self.pc -= 2,
-            _ => ()
+            _ => (),
         }
 
         inst

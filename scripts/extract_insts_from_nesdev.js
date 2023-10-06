@@ -57,24 +57,32 @@ var address_method_dict = {
   'Immediate': 'self._resolve_imm_opnd(memory)',
   "Zero Page": 'self._resolve_zero_page_opnd(memory)',
   "Zero Page,X": 'self._resolve_zero_page_x_opnd(memory)',
+  "Zero Page,Y": 'self._resolve_zero_page_y_opnd(memory)',
   "Absolute": 'self._resolve_absolute_opnd(memory)',
   "Absolute,X": 'self._resolve_absolute_x_opnd(memory)',
   "Absolute,Y": 'self._resolve_absolute_y_opnd(memory)',
   "(Indirect,X)": 'self._resolve_index_indirect_opnd(memory)',
   "(Indirect),Y": 'self._resolve_indirect_index_opnd(memory)',
-  "Implied": "0"
+  "Indirect": 'self._resolve_indirect_opnd(memory)',
+  "Implied": "0",
+  "Accumulator": "0",
+  "Relative": "self._resolve_imm_opnd(memory)"
 }
 
 var address_method_to_enum = {
   'Immediate': 'OperandType::Imm',
   "Zero Page": 'OperandType::Mem',
   "Zero Page,X": 'OperandType::Mem',
+  "Zero Page,Y": 'OperandType::Mem',
   "Absolute": 'OperandType::Mem',
   "Absolute,X": 'OperandType::Mem',
   "Absolute,Y": 'OperandType::Mem',
   "(Indirect,X)": 'OperandType::Mem',
   "(Indirect),Y": 'OperandType::Mem',
-  "Implied": 'OperandType::Implied'
+  "Indirect": 'OperandType::Indirect',
+  "Implied": 'OperandType::Implied',
+  "Accumulator": "OperandType::Accumulator",
+  "Relative": "OperandType::Relative"
 }
 
 var operand_encoding = {
@@ -87,6 +95,6 @@ for (var i = 0; i < insts.length; i++) {
   var inst_name = insts_names[i];
   var inst = insts[i]
   inst.forEach(function(x) {
-    console.log(x[IDX_OPCODE] + '=>{' + 'Instruction::' + inst_name + '(opcode, ' + address_method_dict[x[IDX_ADDR_METHOD]] + ', ' + operand_encoding[x[IDX_BYTES]] + ', ' + address_method_to_enum[x[IDX_ADDR_METHOD]] + '),}')
+    console.log(x[IDX_OPCODE] + '=>' + 'Instruction::' + inst_name + '(opcode, ' + address_method_dict[x[IDX_ADDR_METHOD]] + ', ' + operand_encoding[x[IDX_BYTES]] + ', ' + address_method_to_enum[x[IDX_ADDR_METHOD]] + ')')
   })
 }

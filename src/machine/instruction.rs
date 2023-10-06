@@ -1,139 +1,143 @@
-use super::cpu::CPU;
+use super::cpu::{ CPU, OperandType };
 use super::memory::Memory;
 use core::panic;
 
 #[derive(Debug)]
 pub enum Instruction {
     /* InstructionName(Opcode, Operand, Oprand byte size) */
-    ADC(u8, u16, u8),
-    AND(u8, u16, u8),
-    ASL(u8, u16, u8),
-    BCC(u8, u16, u8),
-    BCS(u8, u16, u8),
-    BEQ(u8, u16, u8),
-    BIT(u8, u16, u8),
-    BMI(u8, u16, u8),
-    BNE(u8, u16, u8),
-    BPL(u8, u16, u8),
-    BRK(u8, u16, u8),
-    BVC(u8, u16, u8),
-    BVS(u8, u16, u8),
-    CLC(u8, u16, u8),
-    CLD(u8, u16, u8),
-    CLI(u8, u16, u8),
-    CLV(u8, u16, u8),
-    CMP(u8, u16, u8),
-    CPX(u8, u16, u8),
-    CPY(u8, u16, u8),
-    DEC(u8, u16, u8),
-    DEX(u8, u16, u8),
-    DEY(u8, u16, u8),
-    EOR(u8, u16, u8),
-    INC(u8, u16, u8),
-    INX(u8, u16, u8),
-    INY(u8, u16, u8),
-    JMP(u8, u16, u8),
-    JSR(u8, u16, u8),
-    LDA(u8, u16, u8),
-    LDX(u8, u16, u8),
-    LDY(u8, u16, u8),
-    LSR(u8, u16, u8),
-    NOP(u8, u16, u8),
-    ORA(u8, u16, u8),
-    PHA(u8, u16, u8),
-    PHP(u8, u16, u8),
-    PLA(u8, u16, u8),
-    PLP(u8, u16, u8),
-    ROL(u8, u16, u8),
-    ROR(u8, u16, u8),
-    RTI(u8, u16, u8),
-    RTS(u8, u16, u8),
-    SBC(u8, u16, u8),
-    SEC(u8, u16, u8),
-    SED(u8, u16, u8),
-    SEI(u8, u16, u8),
-    STA(u8, u16, u8),
-    STX(u8, u16, u8),
-    STY(u8, u16, u8),
-    TAX(u8, u16, u8),
-    TAY(u8, u16, u8),
-    TSX(u8, u16, u8),
-    TXA(u8, u16, u8),
-    TXS(u8, u16, u8),
-    TYA(u8, u16, u8),
+    ADC(u8, u16, u8, OperandType),
+    AND(u8, u16, u8, OperandType),
+    ASL(u8, u16, u8, OperandType),
+    BCC(u8, u16, u8, OperandType),
+    BCS(u8, u16, u8, OperandType),
+    BEQ(u8, u16, u8, OperandType),
+    BIT(u8, u16, u8, OperandType),
+    BMI(u8, u16, u8, OperandType),
+    BNE(u8, u16, u8, OperandType),
+    BPL(u8, u16, u8, OperandType),
+    BRK(u8, u16, u8, OperandType),
+    BVC(u8, u16, u8, OperandType),
+    BVS(u8, u16, u8, OperandType),
+    CLC(u8, u16, u8, OperandType),
+    CLD(u8, u16, u8, OperandType),
+    CLI(u8, u16, u8, OperandType),
+    CLV(u8, u16, u8, OperandType),
+    CMP(u8, u16, u8, OperandType),
+    CPX(u8, u16, u8, OperandType),
+    CPY(u8, u16, u8, OperandType),
+    DEC(u8, u16, u8, OperandType),
+    DEX(u8, u16, u8, OperandType),
+    DEY(u8, u16, u8, OperandType),
+    EOR(u8, u16, u8, OperandType),
+    INC(u8, u16, u8, OperandType),
+    INX(u8, u16, u8, OperandType),
+    INY(u8, u16, u8, OperandType),
+    JMP(u8, u16, u8, OperandType),
+    JSR(u8, u16, u8, OperandType),
+    LDA(u8, u16, u8, OperandType),
+    LDX(u8, u16, u8, OperandType),
+    LDY(u8, u16, u8, OperandType),
+    LSR(u8, u16, u8, OperandType),
+    NOP(u8, u16, u8, OperandType),
+    ORA(u8, u16, u8, OperandType),
+    PHA(u8, u16, u8, OperandType),
+    PHP(u8, u16, u8, OperandType),
+    PLA(u8, u16, u8, OperandType),
+    PLP(u8, u16, u8, OperandType),
+    ROL(u8, u16, u8, OperandType),
+    ROR(u8, u16, u8, OperandType),
+    RTI(u8, u16, u8, OperandType),
+    RTS(u8, u16, u8, OperandType),
+    SBC(u8, u16, u8, OperandType),
+    SEC(u8, u16, u8, OperandType),
+    SED(u8, u16, u8, OperandType),
+    SEI(u8, u16, u8, OperandType),
+    STA(u8, u16, u8, OperandType),
+    STX(u8, u16, u8, OperandType),
+    STY(u8, u16, u8, OperandType),
+    TAX(u8, u16, u8, OperandType),
+    TAY(u8, u16, u8, OperandType),
+    TSX(u8, u16, u8, OperandType),
+    TXA(u8, u16, u8, OperandType),
+    TXS(u8, u16, u8, OperandType),
+    TYA(u8, u16, u8, OperandType),
 
     MyHalt(u8),
     Unknown(u8),
 }
 
 impl Instruction {
-    pub fn get_contents(&self) -> (u8, u16, u8) {
+    pub fn get_contents(&self) -> (u8, u16, u8, &OperandType) {
         match self {
-              Instruction::ADC(opcode, operand, operand_size)
-            | Instruction::AND(opcode, operand, operand_size)
-            | Instruction::ASL(opcode, operand, operand_size)
-            | Instruction::BCC(opcode, operand, operand_size)
-            | Instruction::BCS(opcode, operand, operand_size)
-            | Instruction::BEQ(opcode, operand, operand_size)
-            | Instruction::BIT(opcode, operand, operand_size)
-            | Instruction::BMI(opcode, operand, operand_size)
-            | Instruction::BNE(opcode, operand, operand_size)
-            | Instruction::BPL(opcode, operand, operand_size)
-            | Instruction::BRK(opcode, operand, operand_size)
-            | Instruction::BVC(opcode, operand, operand_size)
-            | Instruction::BVS(opcode, operand, operand_size)
-            | Instruction::CLC(opcode, operand, operand_size)
-            | Instruction::CLD(opcode, operand, operand_size)
-            | Instruction::CLI(opcode, operand, operand_size)
-            | Instruction::CLV(opcode, operand, operand_size)
-            | Instruction::CMP(opcode, operand, operand_size)
-            | Instruction::CPX(opcode, operand, operand_size)
-            | Instruction::CPY(opcode, operand, operand_size)
-            | Instruction::DEC(opcode, operand, operand_size)
-            | Instruction::DEX(opcode, operand, operand_size)
-            | Instruction::DEY(opcode, operand, operand_size)
-            | Instruction::EOR(opcode, operand, operand_size)
-            | Instruction::INC(opcode, operand, operand_size)
-            | Instruction::INX(opcode, operand, operand_size)
-            | Instruction::INY(opcode, operand, operand_size)
-            | Instruction::JMP(opcode, operand, operand_size)
-            | Instruction::JSR(opcode, operand, operand_size)
-            | Instruction::LDA(opcode, operand, operand_size)
-            | Instruction::LDX(opcode, operand, operand_size)
-            | Instruction::LDY(opcode, operand, operand_size)
-            | Instruction::LSR(opcode, operand, operand_size)
-            | Instruction::NOP(opcode, operand, operand_size)
-            | Instruction::ORA(opcode, operand, operand_size)
-            | Instruction::PHA(opcode, operand, operand_size)
-            | Instruction::PHP(opcode, operand, operand_size)
-            | Instruction::PLA(opcode, operand, operand_size)
-            | Instruction::PLP(opcode, operand, operand_size)
-            | Instruction::ROL(opcode, operand, operand_size)
-            | Instruction::ROR(opcode, operand, operand_size)
-            | Instruction::RTI(opcode, operand, operand_size)
-            | Instruction::RTS(opcode, operand, operand_size)
-            | Instruction::SBC(opcode, operand, operand_size)
-            | Instruction::SEC(opcode, operand, operand_size)
-            | Instruction::SED(opcode, operand, operand_size)
-            | Instruction::SEI(opcode, operand, operand_size)
-            | Instruction::STA(opcode, operand, operand_size)
-            | Instruction::STX(opcode, operand, operand_size)
-            | Instruction::STY(opcode, operand, operand_size)
-            | Instruction::TAX(opcode, operand, operand_size)
-            | Instruction::TAY(opcode, operand, operand_size)
-            | Instruction::TSX(opcode, operand, operand_size)
-            | Instruction::TXA(opcode, operand, operand_size)
-            | Instruction::TXS(opcode, operand, operand_size)
-            | Instruction::TYA(opcode, operand, operand_size) => (*opcode, *operand, *operand_size),
-            Instruction::MyHalt(opcode) => (255, 0, 0),
+              Instruction::ADC(opcode, operand, operand_size, operand_type)
+            | Instruction::AND(opcode, operand, operand_size, operand_type)
+            | Instruction::ASL(opcode, operand, operand_size, operand_type)
+            | Instruction::BCC(opcode, operand, operand_size, operand_type)
+            | Instruction::BCS(opcode, operand, operand_size, operand_type)
+            | Instruction::BEQ(opcode, operand, operand_size, operand_type)
+            | Instruction::BIT(opcode, operand, operand_size, operand_type)
+            | Instruction::BMI(opcode, operand, operand_size, operand_type)
+            | Instruction::BNE(opcode, operand, operand_size, operand_type)
+            | Instruction::BPL(opcode, operand, operand_size, operand_type)
+            | Instruction::BRK(opcode, operand, operand_size, operand_type)
+            | Instruction::BVC(opcode, operand, operand_size, operand_type)
+            | Instruction::BVS(opcode, operand, operand_size, operand_type)
+            | Instruction::CLC(opcode, operand, operand_size, operand_type)
+            | Instruction::CLD(opcode, operand, operand_size, operand_type)
+            | Instruction::CLI(opcode, operand, operand_size, operand_type)
+            | Instruction::CLV(opcode, operand, operand_size, operand_type)
+            | Instruction::CMP(opcode, operand, operand_size, operand_type)
+            | Instruction::CPX(opcode, operand, operand_size, operand_type)
+            | Instruction::CPY(opcode, operand, operand_size, operand_type)
+            | Instruction::DEC(opcode, operand, operand_size, operand_type)
+            | Instruction::DEX(opcode, operand, operand_size, operand_type)
+            | Instruction::DEY(opcode, operand, operand_size, operand_type)
+            | Instruction::EOR(opcode, operand, operand_size, operand_type)
+            | Instruction::INC(opcode, operand, operand_size, operand_type)
+            | Instruction::INX(opcode, operand, operand_size, operand_type)
+            | Instruction::INY(opcode, operand, operand_size, operand_type)
+            | Instruction::JMP(opcode, operand, operand_size, operand_type)
+            | Instruction::JSR(opcode, operand, operand_size, operand_type)
+            | Instruction::LDA(opcode, operand, operand_size, operand_type)
+            | Instruction::LDX(opcode, operand, operand_size, operand_type)
+            | Instruction::LDY(opcode, operand, operand_size, operand_type)
+            | Instruction::LSR(opcode, operand, operand_size, operand_type)
+            | Instruction::NOP(opcode, operand, operand_size, operand_type)
+            | Instruction::ORA(opcode, operand, operand_size, operand_type)
+            | Instruction::PHA(opcode, operand, operand_size, operand_type)
+            | Instruction::PHP(opcode, operand, operand_size, operand_type)
+            | Instruction::PLA(opcode, operand, operand_size, operand_type)
+            | Instruction::PLP(opcode, operand, operand_size, operand_type)
+            | Instruction::ROL(opcode, operand, operand_size, operand_type)
+            | Instruction::ROR(opcode, operand, operand_size, operand_type)
+            | Instruction::RTI(opcode, operand, operand_size, operand_type)
+            | Instruction::RTS(opcode, operand, operand_size, operand_type)
+            | Instruction::SBC(opcode, operand, operand_size, operand_type)
+            | Instruction::SEC(opcode, operand, operand_size, operand_type)
+            | Instruction::SED(opcode, operand, operand_size, operand_type)
+            | Instruction::SEI(opcode, operand, operand_size, operand_type)
+            | Instruction::STA(opcode, operand, operand_size, operand_type)
+            | Instruction::STX(opcode, operand, operand_size, operand_type)
+            | Instruction::STY(opcode, operand, operand_size, operand_type)
+            | Instruction::TAX(opcode, operand, operand_size, operand_type)
+            | Instruction::TAY(opcode, operand, operand_size, operand_type)
+            | Instruction::TSX(opcode, operand, operand_size, operand_type)
+            | Instruction::TXA(opcode, operand, operand_size, operand_type)
+            | Instruction::TXS(opcode, operand, operand_size, operand_type)
+            | Instruction::TYA(opcode, operand, operand_size, operand_type) => (*opcode, *operand, *operand_size, operand_type),
+            Instruction::MyHalt(opcode) => (255, 0, 0, &OperandType::Imm),
             _ => {
                 panic!("Unknown instruction {:?}", self);
             }
         }
     }
 
-    pub fn get_operand(&self) -> u16 {
-        self.get_contents().1
+    pub fn get_operand(&self, memory: &mut Memory) -> u16 {
+        match self.get_contents().3 {
+            OperandType::Imm => self.get_contents().1,
+            OperandType::Mem => memory.read(self.get_contents().1) as u16,
+            _ => 0
+        }
     }
 
     pub fn get_opcode(&self) -> u8 {
@@ -145,14 +149,14 @@ impl Instruction {
     }
 }
 
-pub trait InstExe {
+pub trait InstEXE {
     fn execute(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory);
 }
 
 pub struct ADCInst;
-impl InstExe for ADCInst {
+impl InstEXE for ADCInst {
     fn execute(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        let operand = inst.get_operand();
+        let operand = inst.get_operand(memory);
         (_, cpu.status.overflow) = (cpu.a as i8).overflowing_add(operand as i8);
         (cpu.a, cpu.status.carry) = cpu.a.overflowing_add(operand as u8);
         cpu.set_nz(cpu.a);
@@ -160,9 +164,9 @@ impl InstExe for ADCInst {
 }
 
 pub struct LDAInst;
-impl InstExe for LDAInst {
+impl InstEXE for LDAInst {
     fn execute(cpu: &mut CPU, inst: &Instruction, memory: &mut Memory) {
-        let operand = inst.get_operand();
+        let operand = inst.get_operand(memory);
         cpu.a = operand as u8;
         cpu.set_nz(cpu.a);
     }

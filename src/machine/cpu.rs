@@ -1,5 +1,5 @@
 use super::{
-    instruction::{ADCInst, Instruction, LDAInst, InstExe},
+    instruction::{ADCInst, Instruction, LDAInst, InstEXE},
     memory::Memory,
     monitor::MonitorState,
 };
@@ -63,9 +63,14 @@ enum StatusRegBit {
     Carry,
 }
 
-const OPERAND_SINGLE_BYTE: u8 = 1;
-const OPERAND_DOUBLE_BYTES: u8 = 2;
+const OPERAND_SINGLE_ENCODING: u8 = 1;
+const OPERAND_DOUBLE_ENCODING: u8 = 2;
 const OPERAND_NON: u8 = 0;
+
+#[derive(Debug)]
+pub enum OperandType {
+    Imm, Mem, Implied
+}
 
 impl CPU {
     pub fn new() -> Self {
@@ -169,33 +174,33 @@ impl CPU {
         /* TODO: Refactor the process to fetch operand for some insts */
         match opcode {
             0x69 => {
-                Instruction::ADC(opcode, self._resolve_imm_opnd(memory), OPERAND_SINGLE_BYTE)
+                Instruction::ADC(opcode, self._resolve_imm_opnd(memory), OPERAND_SINGLE_ENCODING, OperandType::Imm)
             }
             0x65 => {
-                Instruction::ADC(opcode, self._resolve_zero_page_opnd(memory), OPERAND_SINGLE_BYTE)
+                Instruction::ADC(opcode, self._resolve_zero_page_opnd(memory), OPERAND_SINGLE_ENCODING, OperandType::Mem)
             }
             0x75 => {
-                Instruction::ADC(opcode, self._resolve_zero_page_x_opnd(memory), OPERAND_SINGLE_BYTE)
+                Instruction::ADC(opcode, self._resolve_zero_page_x_opnd(memory), OPERAND_SINGLE_ENCODING, OperandType::Mem)
             }
             0x6D => {
-                Instruction::ADC(opcode, self._resolve_absolute_opnd(memory), OPERAND_DOUBLE_BYTES)
+                Instruction::ADC(opcode, self._resolve_absolute_opnd(memory), OPERAND_DOUBLE_ENCODING, OperandType::Mem)
             }
             0x7D => {
-                Instruction::ADC(opcode, self._resolve_absolute_x_opnd(memory), OPERAND_DOUBLE_BYTES)
+                Instruction::ADC(opcode, self._resolve_absolute_x_opnd(memory), OPERAND_DOUBLE_ENCODING, OperandType::Mem)
             }
             0x79 => {
-                Instruction::ADC(opcode, self._resolve_absolute_y_opnd(memory), OPERAND_DOUBLE_BYTES)
+                Instruction::ADC(opcode, self._resolve_absolute_y_opnd(memory), OPERAND_DOUBLE_ENCODING, OperandType::Mem)
             }
             0x61 => {
-                Instruction::ADC(opcode, self._resolve_index_indirect_opnd(memory), OPERAND_SINGLE_BYTE)
+                Instruction::ADC(opcode, self._resolve_index_indirect_opnd(memory), OPERAND_SINGLE_ENCODING, OperandType::Mem)
             }
             0x71 => {
-                Instruction::ADC(opcode, self._resolve_indirect_index_opnd(memory), OPERAND_SINGLE_BYTE)
+                Instruction::ADC(opcode, self._resolve_indirect_index_opnd(memory), OPERAND_SINGLE_ENCODING, OperandType::Mem)
             }
             0xA9 => {
                 let operand = memory.read(self.pc);
                 self.pc += 1;
-                Instruction::LDA(opcode, operand as u16, OPERAND_SINGLE_BYTE)
+                Instruction::LDA(opcode, operand as u16, OPERAND_SINGLE_ENCODING, OperandType::Imm)
             }
             0xFF => Instruction::MyHalt(255),
             _ => Instruction::Unknown(opcode),
@@ -214,8 +219,8 @@ impl CPU {
 
         /* Eat operand byte(s) */
         match inst.get_operand_size() {
-            OPERAND_SINGLE_BYTE => self.pc -= 1,
-            OPERAND_DOUBLE_BYTES => self.pc -= 2,
+            OPERAND_SINGLE_ENCODING => self.pc -= 1,
+            OPERAND_DOUBLE_ENCODING => self.pc -= 2,
             _ => ()
         }
 
@@ -231,8 +236,8 @@ impl CPU {
     pub fn interpret(&mut self, inst: &Instruction, memory: &mut Memory) {
         match inst {
             /* TODO: Refactor this piece of code to a small framework */
-            Instruction::LDA(_, _, _) => LDAInst::execute(self, inst, memory),
-            Instruction::ADC(_, _, _) => ADCInst::execute(self, inst, memory),
+            Instruction::LDA(_, _, _, _) => LDAInst::execute(self, inst, memory),
+            Instruction::ADC(_, _, _, _) => ADCInst::execute(self, inst, memory),
             Instruction::MyHalt(_) => {
                 self.pc -= 1;
             }
